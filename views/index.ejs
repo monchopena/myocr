@@ -1,0 +1,131 @@
+<html>
+  <head>
+    <title><%= title %></title>
+
+
+
+    <style>
+        body{font-family:Sans-Serif;}
+        canvas{position:absolute; left: -9999em;}
+        #button{background-color: Red; color: #fff; padding: 3px 10px; cursor:pointer; display: inline-block; border-radius: 5px;}
+        #sidebar{float:right; width: 45%;}
+        #main{float:left; width: 45%;}
+        #imageToForm{width:100%;}
+        #preview{margin: 20px 0;}
+        label{display: block;}
+        #reader_zone {
+        	margin-top: 20px;
+        }
+        #reader {
+
+            margin-top: 20px;
+            margin-bottom: 20px;
+            font-size: 30px;
+        }
+
+    </style>
+  </head>
+  <body>
+
+    <div id="main">
+        <video id="video"></video>
+        <h1>Instructions</h1>
+        <ul>
+            <li>Above: Live video stream from your computer's camera.</li>
+            <li>Press "Camera button" (left in RED) until you are happy with the photo captured.</li>
+            <li>Copy and paste the "big text string" into the address bar of your browser.</li>
+            <li>What do you see?</li>
+            <li>What applications can you imagine for this UI?</li>
+        </ul>
+
+    </div>
+
+    <div id="sidebar">
+        <a id="button">Camera button</a>
+
+        <!-- target for the canvas-->
+        <div id="canvasHolder"></div>
+
+        <!--preview image captured from canvas-->
+		<img id="preview" src="images/defaul_photo.jpg" width="640" height="480" />
+
+        <label id="reader_zone">OCR reader:</label>
+        
+        <div id="reader"></div>
+
+        <label>base64 image:</label>
+        <textarea id="imageToForm"></textarea>
+  
+  		
+  
+    </div>
+
+    <script>
+
+        var video;
+        var dataURL;
+
+        //http://coderthoughts.blogspot.co.uk/2013/03/html5-video-fun.html - thanks :)
+        function setup() {
+            navigator.myGetMedia = (navigator.getUserMedia ||
+            navigator.webkitGetUserMedia ||
+            navigator.mozGetUserMedia ||
+            navigator.msGetUserMedia);
+            navigator.myGetMedia({ video: true }, connect, error);
+        }
+
+        function connect(stream) {
+            video = document.getElementById("video");
+            video.src = window.URL ? window.URL.createObjectURL(stream) : stream;
+            video.play();
+        }
+
+        function error(e) { console.log(e); }
+
+        addEventListener("load", setup);
+
+        function captureImage() {
+            var canvas = document.createElement('canvas');
+            canvas.id = 'hiddenCanvas';
+            //add canvas to the body element
+            document.body.appendChild(canvas);
+            //add canvas to #canvasHolder
+            document.getElementById('canvasHolder').appendChild(canvas);
+            var ctx = canvas.getContext('2d');
+            //canvas.width = video.videoWidth / 4;
+            //canvas.height = video.videoHeight / 4;
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            //save canvas image as data url
+            dataURL = canvas.toDataURL();
+            //set preview image src to dataURL
+            document.getElementById('preview').src = dataURL;
+            // place the image value in the text box
+            document.getElementById('imageToForm').value = dataURL;
+            socket.emit('from_client', dataURL);
+        }
+
+        //Bind a click to a button to capture an image from the video stream
+        var el = document.getElementById("button");
+        el.addEventListener("click", captureImage, false);
+        
+       
+
+    </script>
+    
+    <script src="javascripts/jquery.min.js"></script>
+    <script src="javascripts/socket.io.js"></script>
+    
+    <script>
+    	var socket = io.connect('http://192.168.1.130:3000');
+    	
+    	socket.on('from_server', function (data) {
+    		console.log(data);
+            $("#reader").html(data);
+        });
+    	
+    </script>
+
+  </body>
+</html>
