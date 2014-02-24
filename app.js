@@ -47,7 +47,9 @@ io.sockets.on('connection', function (socket) {
                 console.log(err);
             } else {
                 console.log("The file was saved!");
-                var cmd = 'tesseract public/images/test.png public/images/ocr';
+                //var cmd = 'tesseract public/images/test.png public/images/ocr';
+                var cmd = 'gocr public/images/test.png -o public/images/ocr.txt';
+                console.log(cmd);
 				var child = exec(
 				  cmd,
 				  function (error, stdout, stderr) {
